@@ -23,8 +23,11 @@ def create_app(config_name):
     bcrypt.init_app(app)
     
     # This line is critical. It tells your backend to accept API requests
-    # from your frontend server.
-    CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}}) 
+    # from your frontend servers, both local and deployed.
+    CORS(app, resources={r"/api/*": {"origins": [
+        "http://localhost:5173",
+        "https://justice-link-frontend-collab.vercel.app"
+    ]}}) 
 
     # Swagger configuration
     app.config['SWAGGER'] = {
