@@ -71,7 +71,7 @@ http://127.0.0.1:5000
 ## 📄 API Documentation
 This project uses Flasgger to automatically generate interactive API docs (Swagger UI). Once the server is running, visit:
 
-http://127.0.0.1:5000/apidocs/
+https://justice-link-backend-collab.onrender.com/apidocs/
 
 to view and test all available endpoints.
 
