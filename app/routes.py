@@ -17,6 +17,22 @@ users_schema = UserSchema(many=True)
 
 @api.route('/home_summary', methods=['GET'])
 def home_summary():
+    """
+    Get a summary of home page data.
+    ---
+    tags:
+        - Home
+    responses:
+        200:
+            description: A summary of counts for reports and news.
+            schema:
+                type: object
+                properties:
+                    reportsCount:
+                        type: integer
+                    newsCount:
+                        type: integer
+    """
     reports_count = Report.query.count()
     news_count = NewsArticle.query.count()
     return jsonify({
@@ -27,6 +43,26 @@ def home_summary():
 @api.route('/reports', methods=['POST'])
 @token_required
 def create_report(current_user):
+    """
+    Create a new report.
+    ---
+    tags:
+      - Reports
+    security:
+      - Bearer: []
+    parameters:
+      - in: body
+        name: body
+        schema:
+          $ref: '#/definitions/Report'
+    responses:
+      201:
+        description: Report created successfully.
+      400:
+        description: Invalid input.
+      401:
+        description: Unauthorized.
+    """
     json_data = request.get_json()
     try:
         data = report_schema.load(json_data)
@@ -46,6 +82,23 @@ def create_report(current_user):
 @api.route('/reports', methods=['GET'])
 @token_required
 def get_reports(current_user):
+    """
+    Get a list of all reports.
+    ---
+    tags:
+      - Reports
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: A list of reports.
+        schema:
+          type: array
+          items:
+            $ref: '#/definitions/Report'
+      401:
+        description: Unauthorized.
+    """
     all_reports = Report.query.order_by(Report.date_of_incident.desc()).all()
     return jsonify(reports_schema.dump(all_reports)), 200
 
@@ -53,11 +106,41 @@ def get_reports(current_user):
 @api.route('/my_reports', methods=['GET'])
 @token_required
 def get_my_reports(current_user):
+    """
+    Get a list of reports for the current user.
+    ---
+    tags:
+      - Reports
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: A list of the current user's reports.
+        schema:
+          type: array
+          items:
+            $ref: '#/definitions/Report'
+      401:
+        description: Unauthorized.
+    """
     user_reports = Report.query.filter_by(user_id=current_user.id).order_by(Report.date_of_incident.desc()).all()
     return jsonify(reports_schema.dump(user_reports)), 200
 
 @api.route('/news', methods=['GET'])
 def get_news_articles():
+    """
+    Get a list of all news articles.
+    ---
+    tags:
+      - News
+    responses:
+      200:
+        description: A list of news articles.
+        schema:
+          type: array
+          items:
+            $ref: '#/definitions/NewsArticle'
+    """
     articles = NewsArticle.query.order_by(NewsArticle.published_date.desc()).all()
     return jsonify(news_articles_schema.dump(articles)), 200
 
@@ -65,6 +148,28 @@ def get_news_articles():
 @api.route('/admin/news', methods=['POST'])
 @admin_required
 def create_news_article(current_user):
+    """
+    Create a new news article (Admin only).
+    ---
+    tags:
+      - Admin
+    security:
+      - Bearer: []
+    parameters:
+      - in: body
+        name: body
+        schema:
+          $ref: '#/definitions/NewsArticle'
+    responses:
+      201:
+        description: News article created successfully.
+      400:
+        description: Invalid input.
+      401:
+        description: Unauthorized.
+      403:
+        description: Forbidden, admin access required.
+    """
     json_data = request.get_json()
     try:
         data = news_article_schema.load(json_data)
@@ -90,6 +195,35 @@ def create_news_article(current_user):
 @api.route('/admin/news/<int:id>', methods=['PUT'])
 @admin_required
 def update_news_article(current_user, id):
+    """
+    Update a news article (Admin only).
+    ---
+    tags:
+      - Admin
+    security:
+      - Bearer: []
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+        description: The ID of the news article to update.
+      - in: body
+        name: body
+        schema:
+          $ref: '#/definitions/NewsArticle'
+    responses:
+      200:
+        description: News article updated successfully.
+      400:
+        description: Invalid input.
+      401:
+        description: Unauthorized.
+      403:
+        description: Forbidden, admin access required.
+      404:
+        description: News article not found.
+    """
     article = NewsArticle.query.get_or_404(id)
     json_data = request.get_json()
     
@@ -113,6 +247,29 @@ def update_news_article(current_user, id):
 @api.route('/admin/news/<int:id>', methods=['DELETE'])
 @admin_required
 def delete_news_article(current_user, id):
+    """
+    Delete a news article (Admin only).
+    ---
+    tags:
+      - Admin
+    security:
+      - Bearer: []
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+        description: The ID of the news article to delete.
+    responses:
+      200:
+        description: News article deleted successfully.
+      401:
+        description: Unauthorized.
+      403:
+        description: Forbidden, admin access required.
+      404:
+        description: News article not found.
+    """
     article = NewsArticle.query.get_or_404(id)
     article_title = article.title
     
@@ -129,6 +286,25 @@ def delete_news_article(current_user, id):
 @api.route('/admin/users', methods=['GET'])
 @admin_required
 def get_all_users(current_user):
+    """
+    Get a list of all users (Admin only).
+    ---
+    tags:
+      - Admin
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: A list of users.
+        schema:
+          type: array
+          items:
+            $ref: '#/definitions/User'
+      401:
+        description: Unauthorized.
+      403:
+        description: Forbidden, admin access required.
+    """
     users = User.query.all()
     return jsonify(users_schema.dump(users)), 200
 
@@ -136,6 +312,29 @@ def get_all_users(current_user):
 @api.route('/admin/reports/verify/<int:id>', methods=['PUT'])
 @admin_required
 def verify_report(current_user, id):
+    """
+    Verify a report (Admin only).
+    ---
+    tags:
+      - Admin
+    security:
+      - Bearer: []
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+        description: The ID of the report to verify.
+    responses:
+      200:
+        description: Report verified successfully.
+      401:
+        description: Unauthorized.
+      403:
+        description: Forbidden, admin access required.
+      404:
+        description: Report not found.
+    """
     report = Report.query.get_or_404(id)
     report.status = "Verified"
     log = AdminLog(admin_id=current_user.id, action=f"Verified report ID {id}: {report.title}")
@@ -146,6 +345,29 @@ def verify_report(current_user, id):
 @api.route('/admin/reports/reject/<int:id>', methods=['PUT'])
 @admin_required
 def reject_report(current_user, id):
+    """
+    Reject a report (Admin only).
+    ---
+    tags:
+      - Admin
+    security:
+      - Bearer: []
+    parameters:
+      - name: id
+        in: path
+        type: integer
+        required: true
+        description: The ID of the report to reject.
+    responses:
+      200:
+        description: Report rejected successfully.
+      401:
+        description: Unauthorized.
+      403:
+        description: Forbidden, admin access required.
+      404:
+        description: Report not found.
+    """
     report = Report.query.get_or_404(id)
     report.status = "Rejected"
     log = AdminLog(admin_id=current_user.id, action=f"Rejected report ID {id}: {report.title}")
