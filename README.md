@@ -75,3 +75,5 @@ https://justice-link-backend-collab.onrender.com/apidocs/
 
 to view and test all available endpoints.
 
+## Backend link
+https://github.com/AdrianMaina/justice-link-backend-collab
